@@ -6,7 +6,7 @@ __author__ = 'Bruno Alderete'
 
 #######################################################################################################################
 #
-# The MIT License (MIT)
+The MIT License (MIT)
 #
 # Copyright (c) 2020 Eric Espin
 #
