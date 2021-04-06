@@ -1,6 +1,10 @@
 # tribo-electrical_testing_rig
 The following Python scripts are used to remotely control a testing rig used to carry out tribo-electrical characterization of novel contact materials.
 
+Each program runs individually, carrying out a specific measurement.
+
+
+
 @author: Chair of Functional Materials Saarland University - Saarbrücken, Bruno Alderete
 __author__ = 'Bruno Alderete'
 
