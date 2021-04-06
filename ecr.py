@@ -93,9 +93,9 @@ sleep_time = 2                          # delay between measurements (fixed valu
 meas = 5                                # amount of measurements per force (user input)
 delay = 1                               # fixed value
 
-j = 0
+j = 0                                   # iterater
 
-f_list = []
+f_list = []                             # empty list where forces are saved (for data output)
 
 ### RESULTS ###
 df_results = pd.DataFrame(columns=['Current', 'Voltage', 'Resistance', 'Force'])
@@ -107,7 +107,6 @@ df_results = pd.DataFrame(columns=['Current', 'Voltage', 'Resistance', 'Force'])
 
 ### TAKE FORCE ALL AXIS ###
 def take_force_all():
-    #force_sensor = gsv8("COM16", 115200)
     measurement0 = force_sensor.ReadValue()
 
     x_load0 = "%.4f" % float('{}'.format(measurement0.getChannel1()))
@@ -193,7 +192,7 @@ def take_v_meas(v_range='0.100'):
     k2182.write('*RST')                                                         # resets all stored values
     k2182.write(":SENS:FUNC 'VOLT'")                                            # measuremes voltage
     k2182.write(':SENS:CHAN 1')                                                 # channel out measurement  
-    k2182.write(f':SENS:VOLT:CHAN1:RANG {v_range}')                             # sets voltmeter range # k2182.write(':SENS:VOLT:CHAN1:RANG:AUTO ON')
+    k2182.write(f':SENS:VOLT:CHAN1:RANG {v_range}')                             # sets voltmeter range # k2182.write(':SENS:VOLT:CHAN1:RANG:AUTO ON') for auto range
     v_meas_list.append(k2182.query_ascii_values(':READ?'))                      # saves value to list
 
 
@@ -241,7 +240,7 @@ def approach_X_stage(approach_X=1):
         print('Position X: ',float(str(motorX.qPOS(motorX.axes))[18:-3]))
         approach_X = int(input('Do you want to keep moving the X stage? (enter 1 to continue approaching, enter 0 if you DO NOT want to continue approaching: '))
         if approach_X == 1:
-            print('You chose to continue approaching the X stage.\n')                 # MAKE SURE YOU INPUT CORRECTLY (agregar error handling)
+            print('You chose to continue approaching the X stage.\n')                 # MAKE SURE YOU INPUT CORRECTLY
         else:
             print('You are done approaching the X stage.\n')
 
@@ -260,7 +259,7 @@ def approach_Z_stage(approach_Z=1):
         print('Position Z: ',float(str(motorZ.qPOS(motorZ.axes))[18:-3]))
         approach_Z = int(input('Do you want to keep moving the Z stage? (enter 1 to continue approaching, enter 0 if you DO NOT want to continue approaching: '))
         if approach_Z == 1 :
-            print('You chose to continue approaching the Z stage.\n')               # MAKE SURE YOU INPUT CORRECTLY   (agregar error handling)
+            print('You chose to continue approaching the Z stage.\n')               # MAKE SURE YOU INPUT CORRECTLY   
         else:
             print('You are done approaching the Z stage.\n')
 
@@ -305,8 +304,6 @@ def fine_approach(target_load=forces_list[j]):
             position = float(str(motorZ.qPOS(motorZ.axes))[18:-3])                  # get position
             print('Current motor position: ', position)
 
-            # float(str(positionZ)[18:-3])      converts orderdict to float
-
             
             print('\nApproaching...')                             # starts moving
             if float(current_z_load) < (target_load * 0.4):
@@ -323,7 +320,7 @@ def fine_approach(target_load=forces_list[j]):
             print('New motor position: ', position)
 
             time.sleep(0.5)                                                         # wait for 0.2 s before taking new force measurement
-            current_z_load = take_force_normal()                                    # tomo otra medida del sensor de fuerza
+            current_z_load = take_force_normal()                       
             print('current load: ',current_z_load, ' N')
 
     
@@ -359,7 +356,7 @@ def next_load(next_l=forces_list[j]): #j+1
         print('New motor position: ', position)
 
         time.sleep(0.5)                                                         # wait for 0.2 s before taking new force measurement
-        current_z_load = float(take_force_normal())                                    # tomo otra medida del sensor de fuerza
+        current_z_load = float(take_force_normal())                                   
         print('current load: ',current_z_load, ' N')
 
     while (float(current_z_load)) > float(next_l):
@@ -380,7 +377,7 @@ def next_load(next_l=forces_list[j]): #j+1
         print('New motor position: ', position)
 
         time.sleep(0.5)                                                         # wait for 0.2 s before taking new force measurement
-        current_z_load = float(take_force_normal())                                    # tomo otra medida del sensor de fuerza
+        current_z_load = float(take_force_normal())                       
         print('current load: ',current_z_load, ' N')
 
 
@@ -395,7 +392,7 @@ def control_normal_load(target_load=forces_list[j]):
 
         normal_load = take_force_normal()
 
-        if float(normal_load) < target_load:                                                        # ver el martes, se paso la fuerza
+        if float(normal_load) < target_load:                                               
                
             position = float(str(motorZ.qPOS(motorZ.axes))[18:-3])
             ztarget = position + 0.0001
@@ -464,18 +461,15 @@ def start_threading():
             t3.join()
             time.sleep(0.5)
 
-        #is_done = False
-
         t2.start()                                                                                              # start controlling normal load
         time.sleep(0.5)
 
-        normal_load = float(take_force_normal())                                                                # take normal load measurement
+        normal_load = float(take_force_normal())                                                                      # take normal load measurement
         while normal_load < float((forces_list[j] * 0.99)) or normal_load > float((forces_list[j] * 1.01)):           # check that the load is above 99% or below 101% of target
-            time.sleep(0.5)                                                                                     # if it isnt, wait 0.5
+            time.sleep(0.5)                                                                                             # if it isnt, wait 0.5
             normal_load = float(take_force_normal())                                                                    # take measurement again
         
         # once normal load is between 99% and 101%, start ECR measurements
-        #if normal_load > float((target_load * 0.99)) and normal_load < float((target_load * 1.01)):
         time.sleep(0.5)
         t1.start()
         t1.join()
@@ -484,9 +478,7 @@ def start_threading():
 
         if t1.is_alive() == False:                                                                              # when ECR is done, stop controlling normal load
             is_done = True
-            #t2.join()
             print(t1.is_alive())
-        #t2.join()
 
         j += 1                                                                                                  # next force
         time.sleep(1)
