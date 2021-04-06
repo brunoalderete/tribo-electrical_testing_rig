@@ -40,6 +40,8 @@ import pandas as pd
 #############################
 ##### ERC NOW AUTOMATED #####
 #############################
+##### NO FORCE CONTROLL #####
+#############################
 
 # Start and reset instruments
 def start_instr(curr_app='100E-3',curr_prot='150E-3'):
@@ -47,7 +49,6 @@ def start_instr(curr_app='100E-3',curr_prot='150E-3'):
     k2400.write('*RST')
     k2400.timeout = 60000                                                       # 60 seconds timeout
     k2400.write(':ROUT:TERM REAR')
-    # print(k2400.query(':ROUT:TERM?'))
     
     k2400.write(':SENS:FUNC:CONC OFF')
     k2400.write(':SOUR:FUNC CURR')
@@ -65,35 +66,27 @@ def take_i_meas(sour_del=1):                                                    
     k2400.write(':FORM:ELEM CURR')
     k2400.write(':OUTP ON')
     i_meas_list.append(k2400.query_ascii_values(':READ?'))
-    #time.sleep(sleep_time)                                                     # x seconds between iteration          ### commented
-    # print(i_meas_list)
 
 # Take v measurement
 def take_v_meas():
     k2182.write('*RST')
-    #k2182.write('*CLS')
     k2182.write(":SENS:FUNC 'VOLT'")
     k2182.write(':SENS:CHAN 1')
     k2182.write(':SENS:VOLT:CHAN1:RANG 1')                                # k2182.write(':SENS:VOLT:CHAN1:RANG:AUTO ON')
     v_meas_list.append(k2182.query_ascii_values(':READ?'))
-    # print(k2182.query(':READ?'))
+
 
 # Take full measurements
 def take_measurement(meas=5, trigs=0, curr_app='100E-3', curr_prot='150E-3', sour_del=1, sleep_time=1):
-
-
+    
     start_instr(curr_app, curr_prot)
 
     while trigs < meas:
 
         take_i_meas(sour_del)                                           # , sleep_time commented
         take_v_meas()
-        #print(i_meas_list)
-        #print(v_meas_list)
         trigs += 1
         k2400.write(':OUTP OFF')        # turns off smu between measurements
-    
-    #k2400.write(':OUTP OFF')           # commented
 
 rm = pyvisa.ResourceManager('@py')
 
@@ -114,10 +107,10 @@ df_values = pd.DataFrame(columns=['Current', 'Voltage', 'Resistance'])
 while trigs < meas:
 
     if trigs % 2 == 0:
-        take_measurement(meas=1, trigs=0, curr_app=str(current), curr_prot='150E-3', sour_del=1)                 # , sleep_time=1 commented
+        take_measurement(meas=1, trigs=0, curr_app=str(current), curr_prot='150E-3', sour_del=1)              
         time.sleep(sleep_time)
     else:
-        take_measurement(meas=1, trigs=0, curr_app='-' + str(current), curr_prot='150E-3', sour_del=1)                 # , sleep_time=1 commented
+        take_measurement(meas=1, trigs=0, curr_app='-' + str(current), curr_prot='150E-3', sour_del=1)           
         time.sleep(sleep_time)
     trigs += 1
 
@@ -139,4 +132,4 @@ df_values['Resistance'] = resistance
 print(df_values)
 
 # Writes data to csv file
-#df_values.to_csv(r'E:\User data\Bruno Alderete\ECR new Bruno\IV_measurements_0.csv', index=False)
+df_values.to_csv(r'E:\User data\', index=False)
