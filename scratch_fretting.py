@@ -31,19 +31,13 @@ __author__ = 'Bruno Alderete'
 #
 #######################################################################################################################
 
-'''
-### CHANGES ###
-1 - Made force control as a function of process and not time
-2 - Added steps to force compensation 
-'''
-
 #########################################################################
 
-#########################################################################
-#########################################################################
-############# SCRATCH AND FRETTING TEST FOR PROF MÜCKLICH ###############
-#########################################################################
-#########################################################################
+########################################################
+########################################################
+############# SCRATCH AND FRETTING TEST  ###############
+########################################################
+########################################################
 
 #########################################################################
 
@@ -118,7 +112,6 @@ df_all_values = pd.DataFrame(columns=['Force X-Axis', 'Force Z-Axis', 'CoF', 'Am
 
 ### TAKE FORCE ALL AXIS ###
 def take_force_all():
-    #force_sensor = gsv8("COM16", 115200)
     measurement0 = force_sensor.ReadValue()
 
     x_load0 = "%.4f" % float('{}'.format(measurement0.getChannel1()))
@@ -129,7 +122,6 @@ def take_force_all():
     print('Y load is: ', y_load0, ' N')
     print('Z load is: ', z_load0, ' N')
 
-# take_force_all()                                                                                                # TAKES INITIAL FORCE
 
 ### TAKE NORMAL LOAD ONLY ###
 def take_force_normal():
@@ -169,15 +161,12 @@ def start_stages(targetZ=10,targetX=26,vel_Z=15,vel_X=15,wait=5):
 
     time.sleep(wait)
 
-# start_stages(targetZ=10,targetX=26,vel_Z=15,vel_X=15,wait=5)
-
 ### START ELECTRIC INSTRUMENTS ###
 def start_instr(curr_app='100E-3',curr_prot='150E-3'):
     # Start and reset Keithley 2400
     k2400.write('*RST')
     k2400.timeout = 60000                                                       # 60 seconds timeout
     k2400.write(':ROUT:TERM REAR')
-    # print(k2400.query(':ROUT:TERM?'))
     
     k2400.write(':SENS:FUNC:CONC OFF')
     k2400.write(':SOUR:FUNC CURR')
@@ -190,25 +179,22 @@ def start_instr(curr_app='100E-3',curr_prot='150E-3'):
 
 
 ### TAKE i MEASUREMENT ###
-def take_i_meas(sour_del=1):                                                    # , sleep_time=1 commented
+def take_i_meas(sour_del=1):                                             
     k2400.write('TRIG:COUN 1')                                                  # Amount of measurements
     k2400.write(f'SOUR:DEL {sour_del}')                                         # Delay in seconds (between 0, 60). Time i is applied
     k2400.write(':FORM:ELEM CURR')
     k2400.write(':OUTP ON')
     i_meas_list.append(k2400.query_ascii_values(':READ?'))
-    #time.sleep(sleep_time)                                                     # x seconds between iteration          ### commented
-    # print(i_meas_list)
 
 
 ### TAKE V MEASUREMENT ###
 def take_v_meas():
     k2182.write('*RST')
-    #k2182.write('*CLS')
     k2182.write(":SENS:FUNC 'VOLT'")
     k2182.write(':SENS:CHAN 1')
     k2182.write(':SENS:VOLT:CHAN1:RANG 1')                                # k2182.write(':SENS:VOLT:CHAN1:RANG:AUTO ON')
     v_meas_list.append(k2182.query_ascii_values(':READ?'))
-    # print(k2182.query(':READ?'))
+
 
 
 ### TAKE FULL MEASUREMENT ###
@@ -219,15 +205,11 @@ def take_measurement(meas=5, trigs=0, curr_app='100E-3', curr_prot='150E-3', sou
 
     while trigs < meas:
 
-        take_i_meas(sour_del)                                           # , sleep_time commented
+        take_i_meas(sour_del)                                   
         take_v_meas()
-        #print(i_meas_list)
-        #print(v_meas_list)
         trigs += 1
         k2400.write(':OUTP OFF')        # turns off smu between measurements
-    
-    #k2400.write(':OUTP OFF')           # commented
-
+        
 
 ### ECR ###
 def ecr(meas=5):
@@ -235,16 +217,12 @@ def ecr(meas=5):
     while trigs < meas:
 
         if trigs % 2 == 0:
-            take_measurement(meas=1, trigs=0, curr_app=str(current), curr_prot='150E-3', sour_del=1)                        # , sleep_time=1 commented
+            take_measurement(meas=1, trigs=0, curr_app=str(current), curr_prot='150E-3', sour_del=1)                  
             time.sleep(sleep_time)
         else:
-            take_measurement(meas=1, trigs=0, curr_app='-' + str(current), curr_prot='150E-3', sour_del=1)                  # , sleep_time=1 commented
+            take_measurement(meas=1, trigs=0, curr_app='-' + str(current), curr_prot='150E-3', sour_del=1)     
             time.sleep(sleep_time)
         trigs += 1
-    
-    #global is_done
-    #is_done = True
-    #return is_done
 
 
 ### COARSE APPROACH X-AXIS ###
@@ -260,7 +238,7 @@ def approach_X_stage(approach_X=1):
         print('Position X: ',float(str(motorX.qPOS(motorX.axes))[18:-3]))
         approach_X = int(input('Do you want to keep moving the X stage? (enter 1 to continue approaching, enter 0 if you DO NOT want to continue approaching: '))
         if approach_X == 1:
-            print('You chose to continue approaching the X stage.\n')                 # MAKE SURE YOU INPUT CORRECTLY (agregar error handling)
+            print('You chose to continue approaching the X stage.\n')                 # MAKE SURE YOU INPUT CORRECTLY
         else:
             print('You are done approaching the X stage.\n')
 
@@ -278,7 +256,7 @@ def approach_Z_stage(approach_Z=1):
         print('Position Z: ',float(str(motorZ.qPOS(motorZ.axes))[18:-3]))
         approach_Z = int(input('Do you want to keep moving the Z stage? (enter 1 to continue approaching, enter 0 if you DO NOT want to continue approaching: '))
         if approach_Z == 1 :
-            print('You chose to continue approaching the Z stage.\n')               # MAKE SURE YOU INPUT CORRECTLY   (agregar error handling)
+            print('You chose to continue approaching the Z stage.\n')               # MAKE SURE YOU INPUT CORRECTLY
         else:
             print('You are done approaching the Z stage.\n')
 
@@ -310,16 +288,13 @@ print('\n##############################################################')
 print('Now enter the parameters for the fretting test.')
 amplitude = float(input('Enter the amplitude (max amplitude is 75 µm): '))
 print('You chose {} µm amplitude.\n'.format(amplitude))
-#amp.append(amplitude)
 
 frequency_input = float(input('Enter the frequency (max frequency is 100 Hz): '))
 fretting_vel = (frequency_input * amplitude)
 print('You chose {} Hz frequency.\n'.format(frequency_input))
-#freq.append(frequency_input)
 
 cycles = float(input('Enter the desired duration of the fretting test (in cycles): '))
 print('{} cycles will be done.'.format(cycles))
-#dur.append(cycles)
 total_time = (cycles / frequency_input)                                                     # approximate time it takes for the fretting test
 
 ### START ###
@@ -347,8 +322,6 @@ def fine_approach(target_load=5):
             position = float(str(motorZ.qPOS(motorZ.axes))[18:-3])                  # get position
             print('Current motor position: ', position)
 
-            # float(str(positionZ)[18:-3])      converts orderdict to float
-
             
             print('\nApproaching...')                             # starts moving
             if float(current_z_load) < (target_load * 0.4):
@@ -364,8 +337,8 @@ def fine_approach(target_load=5):
             position = float(str(motorZ.qPOS(motorZ.axes))[18:-3]) 
             print('New motor position: ', position)
 
-            time.sleep(0.5)                                                         # wait for 0.2 s before taking new force measurement
-            current_z_load = take_force_normal()                                    # tomo otra medida del sensor de fuerza
+            time.sleep(0.5)                                                         # wait for 0.5 s before taking new force measurement
+            current_z_load = take_force_normal()                   
             print('current load: ',current_z_load, ' N')
 
     
@@ -445,7 +418,7 @@ def acquire_cof():
             next_measurement += Mesfrq
             force_meas = force_sensor.ReadValue()
             value_z = float('{}'.format(force_meas.getChannel3()))              # normal load
-            value_x = float('{}'.format(force_meas.getChannel1()))              # fuerza de rozamiento
+            value_x = float('{}'.format(force_meas.getChannel1()))              # friction
 
             force_x.append(value_x)
             force_z.append(value_z)
@@ -457,35 +430,24 @@ def acquire_cof():
 
 ### CONTROL NORMAL LOAD ###
 def control_normal_load(target_load):
-    #global start_force_control
-    #start_force_control = True
-    #current_time = time.time()
-    #finish_control = current_time + 15 + total_time
     
     while is_done == False:
         #current_time =time.time()
         normal_load = take_force_normal()
 
         if float(normal_load) < target_load:                                                        
-            #while float(normal_load) < target_load:
                
             position = float(str(motorZ.qPOS(motorZ.axes))[18:-3])
             ztarget = position + 0.0001
-            #print('move stages forward')
             motorZ.MOV(motorZ.axes, ztarget)
-            #pitools.waitontarget(motorZ)
             normal_load = take_force_normal()
 
         elif float(normal_load) > target_load:
-            #while float(normal_load) > target_load:
 
             position = float(str(motorZ.qPOS(motorZ.axes))[18:-3])
-            ztarget = position - 0.0001
-            #print('move stages forward')
+            ztarget = position - 0.0001)
             motorZ.MOV(motorZ.axes, ztarget)
-            #pitools.waitontarget(motorZ)
             normal_load = take_force_normal()
-            
     else:
         return
         
@@ -527,7 +489,7 @@ def start_threading(target_load):
     time.sleep(0.2)
 
     ### Fretting test (compensation cont.) ###
-    t1 = threading.Thread(target=control_normal_load, args=((5),))                                                  # EN ARGUMENTO PONER LA FUERZA DESEADA (target_load)
+    t1 = threading.Thread(target=control_normal_load, args=((5),)) 
     t1.start()
     time.sleep(1)
     t4 = threading.Thread(target=fretting_test, args=((amplitude), (fretting_vel), (cycles)))
@@ -573,7 +535,6 @@ def save_data():
 
     # Force parameters #
     for x in range(len(force_x[:])):
-    #for x in range(len(force_x[0:])):
         df_results.loc[x, 'Force X-Axis'] = (force_x[x-1])
         df_results.loc[x, 'Force Z-Axis'] = (force_z[x-1])
         coef_of_f = force_x[x-1] / force_z[x-1]
