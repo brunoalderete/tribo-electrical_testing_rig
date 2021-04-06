@@ -102,7 +102,6 @@ df_electric = pd.DataFrame(columns=['Current', 'Voltage', 'Resistance'])
 
 ### TAKE FORCE ALL AXIS ###
 def take_force_all():
-    #force_sensor = gsv8("COM16", 115200)
     measurement0 = force_sensor.ReadValue()
 
     x_load0 = "%.4f" % float('{}'.format(measurement0.getChannel1()))
@@ -159,7 +158,6 @@ def start_instr(curr_app='100E-3',curr_prot='150E-3'):
     k2400.write('*RST')
     k2400.timeout = 60000                                                       # 60 seconds timeout
     k2400.write(':ROUT:TERM REAR')
-    # print(k2400.query(':ROUT:TERM?'))
     
     k2400.write(':SENS:FUNC:CONC OFF')
     k2400.write(':SOUR:FUNC CURR')
@@ -178,37 +176,29 @@ def take_i_meas(sour_del=1):                                                    
     k2400.write(':FORM:ELEM CURR')
     k2400.write(':OUTP ON')
     i_meas_list.append(k2400.query_ascii_values(':READ?'))
-    #time.sleep(sleep_time)                                                     # x seconds between iteration          ### commented
-    # print(i_meas_list)
 
 
 ### TAKE V MEASUREMENT ###
 def take_v_meas():
     k2182.write('*RST')
-    #k2182.write('*CLS')
     k2182.write(":SENS:FUNC 'VOLT'")
     k2182.write(':SENS:CHAN 1')
     k2182.write(':SENS:VOLT:CHAN1:RANG 1')                                # k2182.write(':SENS:VOLT:CHAN1:RANG:AUTO ON')
     v_meas_list.append(k2182.query_ascii_values(':READ?'))
-    # print(k2182.query(':READ?'))
 
 
 ### TAKE FULL MEASUREMENT ###
 def take_measurement(meas=5, trigs=0, curr_app='100E-3', curr_prot='150E-3', sour_del=1, sleep_time=1):
 
-
     start_instr(curr_app, curr_prot)
 
     while trigs < meas:
 
-        take_i_meas(sour_del)                                           # , sleep_time commented
+        take_i_meas(sour_del)                            
         take_v_meas()
-        #print(i_meas_list)
-        #print(v_meas_list)
         trigs += 1
         k2400.write(':OUTP OFF')        # turns off smu between measurements
     
-    #k2400.write(':OUTP OFF')           # commented
 
 
 ### ECR ###
@@ -217,10 +207,10 @@ def ecr(meas=5):
     while trigs < meas:
 
         if trigs % 2 == 0:
-            take_measurement(meas=1, trigs=0, curr_app=str(current), curr_prot='150E-3', sour_del=1)                        # , sleep_time=1 commented
+            take_measurement(meas=1, trigs=0, curr_app=str(current), curr_prot='150E-3', sour_del=1)             
             time.sleep(sleep_time)
         else:
-            take_measurement(meas=1, trigs=0, curr_app='-' + str(current), curr_prot='150E-3', sour_del=1)                  # , sleep_time=1 commented
+            take_measurement(meas=1, trigs=0, curr_app='-' + str(current), curr_prot='150E-3', sour_del=1)             
             time.sleep(sleep_time)
         trigs += 1
 
@@ -256,7 +246,7 @@ def approach_Z_stage(approach_Z=1):
         print('Position Z: ',float(str(motorZ.qPOS(motorZ.axes))[18:-3]))
         approach_Z = int(input('Do you want to keep moving the Z stage? (enter 1 to continue approaching, enter 0 if you DO NOT want to continue approaching: '))
         if approach_Z == 1 :
-            print('You chose to continue approaching the Z stage.\n')               # MAKE SURE YOU INPUT CORRECTLY   (agregar error handling)
+            print('You chose to continue approaching the Z stage.\n')               # MAKE SURE YOU INPUT CORRECTLY
         else:
             print('You are done approaching the Z stage.\n')
 
@@ -307,8 +297,6 @@ def fine_approach(target_load=5):
             position = float(str(motorZ.qPOS(motorZ.axes))[18:-3])                  # get position
             print('Current motor position: ', position)
 
-            # float(str(positionZ)[18:-3])      converts orderdict to float
-
             
             print('\nApproaching...')                             # starts moving
             if float(current_z_load) < (target_load * 0.4):
@@ -324,8 +312,8 @@ def fine_approach(target_load=5):
             position = float(str(motorZ.qPOS(motorZ.axes))[18:-3]) 
             print('New motor position: ', position)
 
-            time.sleep(0.5)                                                         # wait for 0.2 s before taking new force measurement
-            current_z_load = take_force_normal()                                    # tomo otra medida del sensor de fuerza
+            time.sleep(0.5)                                                         # wait for 0.5 s before taking new force measurement
+            current_z_load = take_force_normal()                   
             print('current load: ',current_z_load, ' N')
 
     
@@ -359,7 +347,7 @@ def acquire_cof():
             next_measurement += Mesfrq
             force_meas = force_sensor.ReadValue()
             value_z = float('{}'.format(force_meas.getChannel3()))              # normal load
-            value_x = float('{}'.format(force_meas.getChannel1()))              # fuerza de rozamiento
+            value_x = float('{}'.format(force_meas.getChannel1()))              # friction
 
             force_x.append(value_x)
             force_z.append(value_z)
@@ -369,63 +357,25 @@ def acquire_cof():
 
             timestamp = time.time()
 
-'''
-### ACQUIRE FORCE DATA ###
-def acquire_cof():
-    timestamp = time.time()
-    start_time = timestamp
-    
-    Mesfrq = 0.01
-    next_measurement = timestamp
-    duration1 = (track_length / scratch_vel) + 4
-
-    while (start_time + duration1) > time.time():
-        
-        if (time.time() >= next_measurement):
-                    
-            next_measurement += Mesfrq
-            force_meas = force_sensor.ReadValue()
-            value_z = float('{}'.format(force_meas.getChannel3()))              # normal load
-            value_x = float('{}'.format(force_meas.getChannel1()))              # fuerza de rozamiento
-
-            force_x.append(value_x)
-            force_z.append(value_z)
-
-            print('\nZ value: ',value_z)
-            print('X value: ',value_x)
-
-            timestamp = time.time()
-'''
 
 ### CONTROL NORMAL LOAD ###
 def control_normal_load(target_load):
-    #global start_force_control
-    #start_force_control = True
-    #current_time = time.time()
-    #finish_control = current_time + 15
     
     while is_done == False:
-        #current_time =time.time()
         normal_load = take_force_normal()
 
-        if float(normal_load) < target_load:                                                        # ver el martes, se paso la fuerza
-            #while float(normal_load) < target_load:
+        if float(normal_load) < target_load:                                         
                 
             position = float(str(motorZ.qPOS(motorZ.axes))[18:-3])
             ztarget = position + 0.0001
-            #print('move stages forward')
             motorZ.MOV(motorZ.axes, ztarget)
-            #pitools.waitontarget(motorZ)
             normal_load = take_force_normal()
 
         elif float(normal_load) > target_load:
-            #while float(normal_load) > target_load:
 
             position = float(str(motorZ.qPOS(motorZ.axes))[18:-3])
             ztarget = position - 0.0001
-            #print('move stages back')
             motorZ.MOV(motorZ.axes, ztarget)
-            #pitools.waitontarget(motorZ)
             normal_load = take_force_normal()
     
     else:
@@ -497,7 +447,7 @@ def save_data():
 
     df_all_values = pd.concat([df_scratch, df_electric], ignore_index=True, axis=1)
 
-    df_all_values.to_csv(r'C:\Users\Labor\Desktop\scratch_ecr24.02_f.csv', index=False)
+    df_all_values.to_csv(r'C:\Users\Labor\Desktop\scratch_ec.csv', index=False)
 
 
 ### Z Stage retreats ###
